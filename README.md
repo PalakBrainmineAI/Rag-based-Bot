@@ -1,11 +1,3 @@
-
-# Project Title
-
-A brief description of what this project does and who it's for
-Here’s a **README.md** draft based on your instructions and the provided documentation 👇
-
----
-
 # Enhanced Multimodal PDF RAG System
 
 ## Overview
