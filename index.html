@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enhanced Multimodal PDF RAG</title>
+    <style>
+        :root { color-scheme: light dark; }
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background: #0b1b2b; color: #e6eef7; }
+        .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+        .card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        h1 { font-size: 1.6rem; margin: 0 0 16px; }
+        .row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
+        textarea { width: 100%; min-height: 90px; resize: vertical; border-radius: 8px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.05); color: inherit; padding: 12px; font-size: 15px; }
+        button { height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.18); color: #0b1b2b; background: #7dd3fc; font-weight: 600; cursor: pointer; }
+        button[disabled] { opacity: 0.6; cursor: not-allowed; }
+        .answer { white-space: pre-wrap; line-height: 1.5; margin-top: 14px; padding: 14px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); min-height: 60px; }
+        .status { font-size: 12px; opacity: 0.8; margin-bottom: 10px; }
+        .footer { opacity: 0.7; font-size: 12px; text-align: center; margin-top: 18px; }
+        a { color: #93c5fd; text-decoration: none; }
+        .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; background: rgba(125, 211, 252, 0.18); border: 1px solid rgba(125, 211, 252, 0.4); color:#c3e7ff; font-size: 12px; margin-left: 8px; }
+    </style>
+    <script>
+        async function checkHealth() {
+            const el = document.getElementById('health');
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+                el.textContent = `Server: ${data.status} • LLM: ${data.llm_initialized ? 'ready' : 'not ready'} • Index: text ✓, images ${data.has_image_index ? '✓' : '—'}`;
+            } catch (e) {
+                el.textContent = 'Server: unavailable';
+            }
+        }
+
+        async function ask() {
+            const questionInput = document.getElementById('question');
+            const btn = document.getElementById('askBtn');
+            const answerEl = document.getElementById('answer');
+            const question = questionInput.value.trim();
+            if (!question) { questionInput.focus(); return; }
+
+            btn.disabled = true; btn.textContent = 'Thinking…';
+            answerEl.textContent = '';
+            try {
+                const res = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Request failed');
+                answerEl.textContent = data.answer || '';
+            } catch (err) {
+                answerEl.textContent = 'Error: ' + err.message;
+            } finally {
+                btn.disabled = false; btn.textContent = 'Ask';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            checkHealth();
+            const q = document.getElementById('question');
+            q.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    ask();
+                }
+            });
+        });
+    </script>
+    </head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>
+                Enhanced Multimodal PDF RAG
+                <span class="pill">FAISS + Reranker + GPT</span>
+            </h1>
+            <div id="health" class="status">Checking server…</div>
+
+            <div class="row">
+                <textarea id="question" placeholder="Ask a question about the loaded PDF…&#10;e.g., What are the key findings? (Ctrl/Cmd + Enter to ask)"></textarea>
+                <button id="askBtn" onclick="ask()">Ask</button>
+            </div>
+
+            <div id="answer" class="answer"></div>
+        </div>
+
+        <div class="footer">Runs locally on your machine. Ensure your <code>OPENAI_API_KEY</code> is set, then start the server with <code>python app2.py</code>.</div>
+    </div>
+</body>
+</html>
+
+
