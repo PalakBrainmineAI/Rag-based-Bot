@@ -153,5 +153,4 @@ The **Enhanced Multimodal PDF RAG System** is a state-of-the-art solution for PD
 
 ---
 
-👉 Do you want me to also **add example `.env` file content** and a **sample `requirements.txt`** so everything is plug-and-play?
 
